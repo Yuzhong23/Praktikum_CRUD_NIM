@@ -9,8 +9,7 @@
 </head>
 <body class="container mt-5">
 <h2 class="mb-4">Daftar Pengguna</h2>
-</body>
-</html>
+
 <div class="card mb-4">
     <div class="card-body">
         <h5 class="card-title" id="formTitle">Tambah User</h5>
@@ -33,6 +32,7 @@
         </form>
     </div>
 </div>
+
 <div class="table-responsive">
     <table class="table table-bordered table-striped">
         <thead class="table-dark">
@@ -53,21 +53,119 @@
     let isUpdate = false;
 
     $(document).ready(function() {
-        loadUsers();
+    loadUsers();
 
-        $('#userForm').submit(function(e) {
-            e.preventDefault();
-            const userData = {
-                name: $('#userName').val(),
-                age: parseInt($('#userAge').val())
-            };
+    $('#userForm').submit(function(e) {
+    e.preventDefault();
+    const userData = {
+    name: $('#userName').val(),
+    age: parseInt($('#userAge').val())
+    };
 
-            if (isUpdate) {
-                const id = $('#userId').val();
-                updateUser(id, userData);
-            } else {
-                addUser(userData);
-            }
-        });
+    if (isUpdate) {
+    const id = $('#userId').val();
+    updateUser(id, userData);
+    } else {
+    addUser(userData);
+    }
     });
+    });
+
+    // 1. Ambil Semua Data (GET)
+    function loadUsers() {
+    $.get(apiUrl, function(response) {
+    let rows = '';
+    // Sesuai struktur data dari Controller (response.data)
+    response.data.forEach(user => {
+    rows += `
+    <tr>
+    <td class="text-muted" style="font-size: 0.85rem;">${user.id}</td>
+    <td>${user.name}</td>
+    <td>${user.age}</td>
+    <td>
+    <button class="btn btn-warning btn-sm" onclick="editUser('${user.id}', '${user.name}', ${user.age})">Edit</button>
+    <button class="btn btn-danger btn-sm" onclick="deleteUser('${user.id}')">Hapus</button>
+    </td>
+    </tr>`;
+    });
+    $('#userTableBody').html(rows);
+    });
+    }
+
+    // 2. Tambah Data (POST)
+    function addUser(data) {
+    $.ajax({
+    url: apiUrl,
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify(data),
+    success: function() {
+    resetForm();
+    loadUsers();
+    alert('User berhasil ditambahkan!');
+    },
+    error: function() {
+    alert('Gagal menambah user.');
+    }
+    });
+    }
+
+    // 3. Update Data (PUT)
+    function updateUser(id, data) {
+    $.ajax({
+    url: `${apiUrl}/${id}`,
+    type: 'PUT',
+    contentType: 'application/json',
+    data: JSON.stringify(data),
+    success: function() {
+    resetForm();
+    loadUsers();
+    alert('Data berhasil diperbarui!');
+    },
+    error: function() {
+    alert('Gagal memperbarui user.');
+    }
+    });
+    }
+
+    // 4. Hapus Data (DELETE)
+    function deleteUser(id) {
+    if (confirm('Apakah Anda yakin ingin menghapus user ini?')) {
+    $.ajax({
+    url: `${apiUrl}/${id}`,
+    type: 'DELETE',
+    success: function() {
+    loadUsers();
+    alert('User telah dihapus.');
+    },
+    error: function() {
+    alert('Gagal menghapus user.');
+    }
+    });
+    }
+    }
+
+    // Helper: Isi form untuk mode Edit
+    function editUser(id, name, age) {
+    $('#userId').val(id);
+    $('#userName').val(name);
+    $('#userAge').val(age);
+    $('#formTitle').text('Edit User');
+    $('#btnSubmit').text('Update User').removeClass('btn-primary').addClass('btn-success');
+    $('#btnCancel').show();
+    isUpdate = true;
+    }
+
+    // Helper: Reset Form ke Mode Tambah
+    function resetForm() {
+    $('#userId').val('');
+    $('#userName').val('');
+    $('#userAge').val('');
+    $('#formTitle').text('Tambah User');
+    $('#btnSubmit').text('Simpan Data').removeClass('btn-success').addClass('btn-primary');
+    $('#btnCancel').hide();
+    isUpdate = false;
+    }
 </script>
+</body>
+</html>
